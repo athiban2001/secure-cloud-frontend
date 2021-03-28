@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useHistory, useParams } from "react-router";
-import AdminNav from "./AdminNav";
+import apiFetch from "../utils/apiFetch";
+import { IsAuthenticatedContext } from "../utils/useLocalState";
+import AdminNav from "../components/AdminNav";
 
 const AdminGroup = () => {
 	const [group, setGroup] = React.useState(null);
 	const [error, setError] = React.useState("");
-	const token = localStorage.getItem("token");
+	const [token] = useContext(IsAuthenticatedContext);
 	const router = useHistory();
 	const params = useParams();
 
@@ -13,23 +15,16 @@ const AdminGroup = () => {
 		if (!token) {
 			return;
 		}
-		fetch(
-			process.env.REACT_APP_API_URL + `/api/admin/groups/${params.id}`,
-			{
-				headers: {
-					authorization: `Bearer ${token}`,
-				},
-			}
-		)
-			.then((res) => res.json())
-			.then((data) => {
-				if (data.error) {
-					setError(data.error);
+		apiFetch(`/api/admin/groups/${params.id}`, {}, token).then(
+			({ data, error }) => {
+				if (error) {
+					setError(error);
 					return;
 				}
 
 				setGroup(data);
-			});
+			}
+		);
 	}, [token, params.id]);
 
 	const onSubmit = (e) => {
@@ -38,22 +33,15 @@ const AdminGroup = () => {
 			`Are You Sure You want to delete group ${group.name}`
 		);
 		if (isConfirmed) {
-			fetch(
-				process.env.REACT_APP_API_URL +
-					`/api/admin/groups/${params.id}`,
-				{
-					method: "DELETE",
+			apiFetch(`/api/admin/groups/${params.id}`, {
+				method: "DELETE",
+			}).then(({ data, error }) => {
+				if (error) {
+					setError(error);
+					return;
 				}
-			)
-				.then((res) => res.json())
-				.then((data) => {
-					if (data.error) {
-						setError(data.error);
-						return;
-					}
-
-					router.push("/admin/groups");
-				});
+				router.push("/admin/groups");
+			});
 		}
 	};
 

@@ -12,12 +12,12 @@ const Home = () => {
 					</Link>
 				</div>
 				<div>
-					<Link href="/" to="/">
+					<Link href="/user/login" to="/user/login">
 						User
 					</Link>
 				</div>
 				<div>
-					<Link href="/" to="/">
+					<Link href="/manager/login" to="/manager/login">
 						Group Manager
 					</Link>
 				</div>

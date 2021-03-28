@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useHistory } from "react-router";
-import AdminNav from "./AdminNav";
+import { IsAuthenticatedContext } from "../utils/useLocalState";
+import AdminNav from "../components/AdminNav";
 
 const AdminGroupCreate = () => {
 	const [groupName, setGroupName] = React.useState("");
@@ -9,7 +10,7 @@ const AdminGroupCreate = () => {
 	const [password, setPassword] = React.useState("");
 	const [error, setError] = React.useState("");
 	const [loading, setLoading] = React.useState(false);
-	const token = localStorage.getItem("token");
+	const [token] = useContext(IsAuthenticatedContext);
 	const router = useHistory();
 
 	if (!token) {

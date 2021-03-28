@@ -67,7 +67,7 @@ const bitLength = (a) => {
 	return bits;
 };
 
-const modInv = (a, n) => {
+export const modInv = (a, n) => {
 	const egcd = eGcd(toZn(a, n), n);
 	if (egcd.g !== 1n) {
 		throw new RangeError("No Inverse Modulo");
@@ -86,7 +86,7 @@ const toZn = (a, n) => {
 	return a < 0 ? a + n : a;
 };
 
-const eGcd = (a, b) => {
+export const eGcd = (a, b) => {
 	a = BigInt(a);
 	b = BigInt(b);
 	if ((a <= 0n) | (b <= 0n)) {
@@ -116,24 +116,6 @@ const eGcd = (a, b) => {
 		y: y,
 	};
 };
-
-export function find_xi(p) {
-	return new Promise((resolve, reject) => {
-		let p1 = p - 1n;
-		let xi = randBetween(p1, 1n);
-		while (eGcd(xi, p1).g !== 1n) {
-			xi = randBetween(p1, 1n);
-		}
-		resolve(xi);
-	});
-}
-
-export function find_yi(xi, p) {
-	return new Promise((resolve, reject) => {
-		let y = modInv(xi, p - 1n);
-		resolve(y);
-	});
-}
 
 const abs = (a) => {
 	a = BigInt(a);

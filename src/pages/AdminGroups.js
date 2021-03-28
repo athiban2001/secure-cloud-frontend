@@ -1,31 +1,27 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useHistory, Link } from "react-router-dom";
-import AdminNav from "./AdminNav";
+import apiFetch from "../utils/apiFetch";
+import { IsAuthenticatedContext } from "../utils/useLocalState";
+import AdminNav from "../components/AdminNav";
 
 const AdminGroups = () => {
 	const [groups, setGroups] = React.useState([]);
 	const [error, setError] = React.useState("");
 	const router = useHistory();
-	const token = localStorage.getItem("token");
+	const [token] = useContext(IsAuthenticatedContext);
 
 	React.useEffect(() => {
 		if (!token) {
 			return;
 		}
-		fetch(process.env.REACT_APP_API_URL + "/api/admin/groups", {
-			headers: {
-				authorization: `Bearer ${token}`,
-			},
-		})
-			.then((res) => res.json())
-			.then((data) => {
-				if (data.error) {
-					setError(data.error);
-					return;
-				}
-				setGroups(data.groups);
-			});
-	}, [token]);
+		apiFetch("/api/admin/groups", {}, token).then(({ data, error }) => {
+			if (error) {
+				setError(error);
+				return;
+			}
+			setGroups(data.groups);
+		});
+	}, [token, setGroups]);
 
 	if (!token) {
 		router.push("/admin/login");

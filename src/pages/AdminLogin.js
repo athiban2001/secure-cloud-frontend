@@ -1,32 +1,29 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useHistory } from "react-router-dom";
+import apiFetch from "../utils/apiFetch";
+import { IsAuthenticatedContext } from "../utils/useLocalState";
 
 const AdminLogin = () => {
 	const [username, setUsername] = React.useState("");
 	const [password, setPassword] = React.useState("");
 	const [error, setError] = React.useState("");
 	const router = useHistory();
+	const [, setToken] = useContext(IsAuthenticatedContext);
 
 	const onSubmit = async (e) => {
 		e.preventDefault();
 		if (!username || !password) {
 			return;
 		}
-		const response = await fetch(
-			process.env.REACT_APP_API_URL + "/api/admin/login",
-			{
-				method: "POST",
-				headers: {
-					"content-type": "application/json",
-				},
-				body: JSON.stringify({ username, password }),
-			}
-		).then((res) => res.json());
+		const response = await apiFetch("/api/admin/login", {
+			method: "POST",
+			body: JSON.stringify({ username, password }),
+		});
 
 		if (response.error) {
 			setError(response.error);
 		} else {
-			localStorage.setItem("token", response.token);
+			setToken(response.data.token);
 			router.push("/admin/groups");
 		}
 	};

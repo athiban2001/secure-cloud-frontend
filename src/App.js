@@ -1,11 +1,19 @@
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import { find_xi, find_yi, modPow } from "./utils/math";
-import Home from "./components/Home";
-import AdminLogin from "./components/AdminLogin";
-import AdminGroups from "./components/AdminGroups";
-import AdminGroup from "./components/AdminGroup";
-import AdminGroupCreate from "./components/AdminGroupCreate";
+import Home from "./pages/Home";
+import AdminLogin from "./pages/AdminLogin";
+import AdminGroups from "./pages/AdminGroups";
+import AdminGroup from "./pages/AdminGroup";
+import AdminGroupCreate from "./pages/AdminGroupCreate";
 import Logout from "./components/Logout";
+import ManagerLogin from "./pages/ManagerLogin";
+import useLocalState, { IsAuthenticatedContext } from "./utils/useLocalState";
+import ManagerGroup from "./pages/ManagerGroup";
+import ManagerRequests from "./pages/ManagerRequests";
+import UserGroups from "./pages/UserGroups";
+import UserRegister from "./pages/UserRegister";
+import UserLogin from "./pages/UserLogin";
+import UserRequests from "./pages/UserRequests";
 
 function findXandY() {
 	let p = 2892008489112152977727500423395925534448265782469434025702914019945396937427n;
@@ -39,32 +47,78 @@ function findXandY() {
 }
 
 function App() {
-	const isAuthenticated = localStorage.getItem("token") || "";
+	const [isAuthenticated, setIsAuthenticated] = useLocalState(
+		"token",
+		localStorage.getItem("token") || ""
+	);
+
 	return (
 		<BrowserRouter>
-			<Switch>
-				<Route path="/" exact component={Home} />
-				<Route path="/admin/login" exact component={AdminLogin} />
-				{isAuthenticated && (
-					<>
-						<Route
-							path="/admin/groups"
-							exact
-							component={AdminGroups}
-						/>
-						<Route
-							path="/admin/groupsCreate"
-							exact
-							component={AdminGroupCreate}
-						/>
-						<Route
-							path="/admin/groups/:id"
-							component={AdminGroup}
-						/>
-						<Route path="/admin/logout" component={Logout} />
-					</>
-				)}
-			</Switch>
+			<IsAuthenticatedContext.Provider
+				value={[isAuthenticated, setIsAuthenticated]}
+			>
+				<Switch>
+					<Route path="/" exact component={Home} />
+					<Route path="/admin/login" exact component={AdminLogin} />
+					<Route
+						path="/manager/login"
+						exact
+						component={ManagerLogin}
+					/>
+					<Route
+						path="/user/register"
+						exact
+						component={UserRegister}
+					/>
+					<Route path="/user/login" exact component={UserLogin} />
+					{isAuthenticated && (
+						<>
+							<Route
+								path="/admin/groups"
+								exact
+								component={AdminGroups}
+							/>
+							<Route
+								path="/admin/groupsCreate"
+								exact
+								component={AdminGroupCreate}
+							/>
+							<Route
+								path="/admin/groups/:id"
+								component={AdminGroup}
+							/>
+							<Route
+								path={[
+									"/admin/logout",
+									"/manager/logout",
+									"/user/logout",
+								]}
+								component={Logout}
+							/>
+							<Route
+								path="/manager/group"
+								exact
+								component={ManagerGroup}
+							/>
+							<Route
+								path="/manager/requests"
+								exact
+								component={ManagerRequests}
+							/>
+							<Route
+								path="/user/groups"
+								exact
+								component={UserGroups}
+							/>
+							<Route
+								path="/user/requests"
+								exact
+								component={UserRequests}
+							/>
+						</>
+					)}
+				</Switch>
+			</IsAuthenticatedContext.Provider>
 		</BrowserRouter>
 	);
 }
