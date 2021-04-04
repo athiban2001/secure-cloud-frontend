@@ -22,10 +22,21 @@ const UserFileDownload = () => {
 		});
 	}, [id, token]);
 
+	if (!id) {
+		router.push(`/user/groups`);
+		return null;
+	}
+
 	return (
 		<>
 			<UserGroupNav />
 			<h1>All Files In This Group</h1>
+			{error && (
+				<div>
+					<h3>An Error Occured</h3>
+					<p>{error}</p>
+				</div>
+			)}
 			{files.map((file) => (
 				<div key={file.id}>
 					<h4>{file.original_filename}</h4>

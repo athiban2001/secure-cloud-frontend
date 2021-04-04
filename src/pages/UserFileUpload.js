@@ -6,6 +6,8 @@ import { IsAuthenticatedContext } from "../utils/useLocalState";
 const UserFileUpload = () => {
 	const [file, setFile] = useState(null);
 	const [files, setFiles] = useState([]);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState("");
 	const { id } = useParams();
 	const router = useHistory();
 	const [token] = useContext(IsAuthenticatedContext);
@@ -39,6 +41,7 @@ const UserFileUpload = () => {
 			return;
 		}
 		if (files.length > 1) {
+			setLoading(true);
 			const formData = new FormData();
 			for (let i = 0; i < files.length; i++) {
 				let file = files[i];
@@ -55,8 +58,14 @@ const UserFileUpload = () => {
 				body: formData,
 			})
 				.then((res) => res.json())
-				.then(console.log);
+				.then(() => {
+					setLoading(false);
+				})
+				.catch(() => {
+					setError("An Error In file uploading");
+				});
 		} else {
+			setLoading(true);
 			const formData = new FormData();
 			formData.append("filepath1", file.name);
 			formData.append("file1", file);
@@ -68,13 +77,24 @@ const UserFileUpload = () => {
 				body: formData,
 			})
 				.then((res) => res.json())
-				.then(console.log);
+				.then(() => {
+					setLoading(false);
+				})
+				.catch(() => {
+					setError("An Error In file uploading");
+				});
 		}
 	};
 
 	return (
 		<>
 			<UserGroupNav />
+			{error && (
+				<div>
+					<h4>An Error Occured</h4>
+					<p>{error}</p>
+				</div>
+			)}
 			<form
 				onSubmit={onSubmit}
 				style={{
@@ -82,8 +102,11 @@ const UserFileUpload = () => {
 					justifyContent: "center",
 					alignItems: "center",
 					minHeight: "80vh",
+					flexDirection: "column",
+					gap: "1rem",
 				}}
 			>
+				{loading && "Loading..."}
 				<input type="file" onChange={onChange} />
 				<input
 					type="file"

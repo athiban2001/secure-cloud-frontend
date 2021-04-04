@@ -3,9 +3,6 @@ const fs = require("fs/promises");
 const cors = require("cors");
 const path = require("path");
 const FileRouter = require("./upload/routes");
-const { modPow } = require("./upload/dh");
-const { getByteArray, bigToUint8Array } = require("./utils/math");
-const salsa20 = require("./encryption/salsa20");
 
 const app = express();
 app.use(cors());
