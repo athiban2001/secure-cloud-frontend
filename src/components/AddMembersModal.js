@@ -15,38 +15,58 @@ const AddMembersModal = (props) => {
 		showModal,
 		requests,
 		handleCheckBoxClick,
-		setRequests,
 	} = props;
 	const [token] = React.useContext(IsAuthenticatedContext);
 
 	const handleFormSubmit = async (e) => {
 		e.preventDefault();
+		const postDataBody = [];
 		if (userList.length === 0) {
+			return;
+		}
+		let { data, error } = await apiFetch("/api/manager/Xi", {}, token);
+		if (error) {
+			setError(error);
+			handleModalClose();
 			return;
 		}
 		const time = new Date();
 		const manager = JSON.parse(atob(token.split(".")[1]));
 		const managerStorage = ManagerStorage.getInstance(manager.id);
-		const { q, p } = await managerStorage.getGroup();
+		const { q, p } = await managerStorage.getGroup(token);
 		const k = find_k(q);
-		managerStorage.addK(k, time);
-		const body = userList.map((user) => {
-			return {
-				...user,
+		managerStorage.addK(k, time, token);
+		data.requests.forEach((req) => {
+			postDataBody.push({
+				userId: req.user_id,
+				Xik: find_Xik(req.xi, k, p).toString(),
+				time: time.toJSON(),
+			});
+		});
+		userList.forEach((user) => {
+			postDataBody.push({
+				userId: user.userId,
 				Xik: find_Xik(user.xi, k, p).toString(),
 				time: time.toJSON(),
-			};
+			});
 		});
-		const { error } = await apiFetch(
+
+		const { error: err } = await apiFetch(
 			"/api/manager/requests",
-			{ method: "POST", body: JSON.stringify(body) },
+			{
+				method: "POST",
+				body: JSON.stringify({
+					membersData: postDataBody,
+					newUsersLength: userList.length,
+				}),
+			},
 			token
 		);
-		handleModalClose();
-		if (error) {
-			setError(error);
+		if (err) {
+			setError(err);
 		}
-		setRequests([]);
+		handleModalClose();
+		window.location.reload();
 	};
 
 	return (

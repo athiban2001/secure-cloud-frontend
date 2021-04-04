@@ -2,6 +2,7 @@ import React from "react";
 import AddMembersModal from "../components/AddMembersModal";
 import ManagerNav from "../components/ManagerNav";
 import RejectRequestsModal from "../components/RejectRequestsModal";
+import RemoveMembersModal from "../components/RemoveMembersModal";
 import apiFetch from "../utils/apiFetch";
 import { IsAuthenticatedContext } from "../utils/useLocalState";
 
@@ -10,8 +11,10 @@ const ManagerRequests = () => {
 	const [error, setError] = React.useState("");
 	const [showAcceptModal, setShowAcceptModal] = React.useState(false);
 	const [showRejectReqModal, setShowRejectReqModal] = React.useState(false);
+	const [showRemoveModal, setShowRemoveModal] = React.useState(false);
 	const [userList, setUserList] = React.useState([]);
 	const [rejRequests, setRejRequests] = React.useState([]);
+	const [removeUserList, setRemoveUserList] = React.useState([]);
 	const [token] = React.useContext(IsAuthenticatedContext);
 
 	React.useEffect(() => {
@@ -32,6 +35,10 @@ const ManagerRequests = () => {
 		setShowRejectReqModal(true);
 	};
 
+	const handleRemoveMembersClick = () => {
+		setShowRemoveModal(true);
+	};
+
 	const handleAcceptModalClose = () => {
 		setUserList([]);
 		setShowAcceptModal(false);
@@ -40,6 +47,11 @@ const ManagerRequests = () => {
 	const handleRejectModalClose = () => {
 		setRejRequests([]);
 		setShowRejectReqModal(false);
+	};
+
+	const handleRemoveModalClose = () => {
+		setRemoveUserList([]);
+		setShowRemoveModal(false);
 	};
 
 	const handleAcceptCheckBoxClick = (e, req) => {
@@ -65,6 +77,16 @@ const ManagerRequests = () => {
 		);
 	};
 
+	const handleRemoveCheckBoxClick = (e, userId) => {
+		if (e.target.checked) {
+			setRemoveUserList((prevState) => [...prevState, userId]);
+			return;
+		}
+		setRemoveUserList((prevState) =>
+			prevState.filter((id) => id !== userId)
+		);
+	};
+
 	return (
 		<div>
 			<ManagerNav />
@@ -74,7 +96,6 @@ const ManagerRequests = () => {
 				setError={setError}
 				showModal={showAcceptModal}
 				requests={requests}
-				setRequests={setRequests}
 				handleCheckBoxClick={handleAcceptCheckBoxClick}
 			/>
 			<RejectRequestsModal
@@ -86,11 +107,22 @@ const ManagerRequests = () => {
 				handleCheckBoxClick={handleRejectCheckBoxClick}
 				handleModalClose={handleRejectModalClose}
 			/>
+			<RemoveMembersModal
+				removeUserList={removeUserList}
+				showModal={showRemoveModal}
+				setError={setError}
+				requests={requests}
+				handleCheckBoxClick={handleRemoveCheckBoxClick}
+				handleModalClose={handleRemoveModalClose}
+			/>
 			<div>
 				<div>
 					<button onClick={handleAddMembersClick}>Add Members</button>
 					<button onClick={handleRejectRequestsClick}>
 						Reject Requests
+					</button>
+					<button onClick={handleRemoveMembersClick}>
+						Remove Members
 					</button>
 				</div>
 				<h1>All Pending Requests</h1>

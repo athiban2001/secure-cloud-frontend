@@ -21,9 +21,30 @@ const UserGroups = () => {
 				setError(error);
 				return;
 			}
+			console.log(data);
 			setGroups(data.groups);
 		});
 	}, [token]);
+
+	const handleLeaveGroup = async (e, groupId) => {
+		const isConfirmed = window.confirm(
+			`Are You Sure You want to leave the group ${groupId}?`
+		);
+
+		if (isConfirmed) {
+			apiFetch(
+				`/api/user/${groupId}/resign`,
+				{ method: "DELETE" },
+				token
+			).then(({ data, error }) => {
+				if (error) {
+					setError(error);
+					return;
+				}
+				router.push("/user/requests");
+			});
+		}
+	};
 
 	const onClick = async (e, groupId) => {
 		if (groups.length < groupId) {
@@ -35,14 +56,19 @@ const UserGroups = () => {
 		const xi = await find_xi(p);
 		const yi = await find_yi(xi, p);
 		const userStorage = UserStorage.getInstance(user.id);
-		userStorage.addGroupPrivateData(
-			id,
-			BigInt(p),
-			BigInt(q),
-			BigInt(g),
-			xi,
-			yi
-		);
+		try {
+			await userStorage.addGroupPrivateData(
+				id,
+				BigInt(p),
+				BigInt(q),
+				BigInt(g),
+				xi,
+				yi,
+				token
+			);
+		} catch (err) {
+			setError(err.message);
+		}
 		const Xi = find_Xi(g, xi, p);
 		const { error } = await apiFetch(
 			"/api/user/requests",
@@ -74,30 +100,52 @@ const UserGroups = () => {
 				</div>
 			)}
 			<h2>Accepted Groups</h2>
-			{groups.every((group) => !group.is_accepted) &&
+			{groups.every((group) => !group.is_joining_accepted) &&
 				"There is 0 groups accepted"}
 			{groups.map((group) => (
-				<div key={group.id}>
-					{group.is_accepted ? (
-						<Link
-							href={`/user/groups/${group.id}`}
-							to={`/user/groups/${group.id}`}
-						>
-							<h3>{group.name}</h3>
-							<div>
-								<strong>Managed By</strong>
-								{" " + group.manager_name}
-							</div>
-						</Link>
+				<div
+					key={group.id}
+					style={{
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "center",
+					}}
+				>
+					{group.is_joining_accepted ? (
+						<>
+							<Link
+								href={`/user/groups/${group.id}`}
+								to={`/user/groups/${group.id}`}
+							>
+								<h3>{group.name}</h3>
+								<div>
+									<strong>Managed By</strong>
+									{" " + group.manager_name}
+								</div>
+							</Link>
+							{!group.leaving_requested && (
+								<div>
+									<button
+										onClick={(e) =>
+											handleLeaveGroup(e, group.id)
+										}
+									>
+										Leave Group
+									</button>
+								</div>
+							)}
+						</>
 					) : null}
 				</div>
 			))}
 			<h2>Requested Groups</h2>
-			{groups.every((group) => !group.is_requested) &&
-				"There is 0 groups requested"}
+			{groups.every(
+				(group) => !group.joining_requested || !group.leaving_requested
+			) && "There is 0 groups requested"}
 			{groups.map((group) => (
 				<div key={group.id}>
-					{group.is_requested ? (
+					{(group.joining_requested && !group.is_joining_accepted) ||
+					(group.leaving_requested && !group.is_leaving_accepted) ? (
 						<div
 							key={group.id}
 							style={{
@@ -113,13 +161,20 @@ const UserGroups = () => {
 									{" " + group.manager_name}
 								</div>
 							</div>
+							<div>
+								{group.joining_requested &&
+									!group.is_joining_accepted &&
+									"Joining Requested"}
+								{group.leaving_requested && "Leaving Requested"}
+							</div>
 						</div>
 					) : null}
 				</div>
 			))}
 			<h2>New Groups</h2>
-			{groups.every((group) => group.is_requested) &&
-				"There is 0 new groups"}
+			{groups.every(
+				(group) => group.joining_requested && group.leaving_requested
+			) && "There is 0 new groups"}
 			{groups.map((group, index) => (
 				<div
 					key={group.id}
@@ -129,7 +184,7 @@ const UserGroups = () => {
 						alignItems: "center",
 					}}
 				>
-					{!group.is_requested ? (
+					{!group.joining_requested && !group.leaving_requested ? (
 						<>
 							<div>
 								<h3>{group.name}</h3>

@@ -14,6 +14,8 @@ import UserGroups from "./pages/UserGroups";
 import UserRegister from "./pages/UserRegister";
 import UserLogin from "./pages/UserLogin";
 import UserRequests from "./pages/UserRequests";
+import UserFileUpload from "./pages/UserFileUpload";
+import UserFileDownload from "./pages/UserFileDownload";
 
 function findXandY() {
 	let p = 2892008489112152977727500423395925534448265782469434025702914019945396937427n;
@@ -109,6 +111,16 @@ function App() {
 								path="/user/groups"
 								exact
 								component={UserGroups}
+							/>
+							<Route
+								path="/user/groups/:id"
+								exact
+								component={UserFileUpload}
+							/>
+							<Route
+								path="/user/groups/:id/download"
+								exact
+								component={UserFileDownload}
 							/>
 							<Route
 								path="/user/requests"

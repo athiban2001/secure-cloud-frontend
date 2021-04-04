@@ -3,6 +3,7 @@ import { useHistory, useParams } from "react-router";
 import apiFetch from "../utils/apiFetch";
 import { IsAuthenticatedContext } from "../utils/useLocalState";
 import AdminNav from "../components/AdminNav";
+import { dateDiff } from "../utils/date";
 
 const AdminGroup = () => {
 	const [group, setGroup] = React.useState(null);
@@ -70,6 +71,24 @@ const AdminGroup = () => {
 					<p>{group.manager}</p>
 					<a href={`mailto://${group.email}`}>{group.email}</a>
 					<h3>Group Members</h3>
+					{group.members &&
+						group.members.map((member) => (
+							<div key={member.user_id}>
+								<div>{member.name}</div>
+								<a href={`mailto://${member.email}`}>
+									{member.email}
+								</a>
+								<div>
+									Joined{" "}
+									{dateDiff(
+										new Date(),
+										new Date(member.join_time)
+									)}{" "}
+									ago
+								</div>
+							</div>
+						))}
+					<br />
 					<form onSubmit={onSubmit}>
 						<button type="submit">Delete Group</button>
 					</form>

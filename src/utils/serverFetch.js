@@ -1,8 +1,6 @@
-const apiFetch = async (subUrl, payload, token) => {
+const serverFetch = async (subUrl, payload, token) => {
 	const headers =
-		payload.method === "POST" ||
-		payload.method === "PUT" ||
-		payload.method === "PATCH"
+		payload.method === "POST" || payload.method === "PUT"
 			? {
 					"Content-Type": "application/json",
 			  }
@@ -16,7 +14,7 @@ const apiFetch = async (subUrl, payload, token) => {
 		}
 	}
 	try {
-		const data = await fetch(process.env.REACT_APP_API_URL + subUrl, {
+		const data = await fetch(process.env.REACT_APP_SERVER_URL + subUrl, {
 			headers,
 			...payload,
 		}).then((res) => res.json());
@@ -31,4 +29,4 @@ const apiFetch = async (subUrl, payload, token) => {
 	}
 };
 
-export default apiFetch;
+export default serverFetch;

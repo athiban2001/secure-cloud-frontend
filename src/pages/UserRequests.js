@@ -18,6 +18,21 @@ const UserRequests = () => {
 		});
 	}, [token]);
 
+	console.log(requests);
+
+	const handleDeleteRejected = async (e, req) => {
+		const { data, error } = apiFetch(
+			"/api/user/requests",
+			{ method: "DELETE" },
+			token
+		);
+		if (error) {
+			setError(error);
+		}
+		console.log(data);
+		window.location.reload();
+	};
+
 	return (
 		<div>
 			<UserNav />
@@ -31,9 +46,21 @@ const UserRequests = () => {
 			<h2>Pending Requests</h2>
 			{requests.every((req) => req.ok != null) &&
 				"There is 0 requests pending"}
+			<h3>Joining Requests</h3>
 			{requests.map((req) => (
 				<React.Fragment key={req.id}>
-					{req.ok == null ? (
+					{req.ok == null && req.joining === true ? (
+						<div>
+							<h3>{req.group_name}</h3>
+							<p>Managed By {req.manager_name}</p>
+						</div>
+					) : null}
+				</React.Fragment>
+			))}
+			<h3>Leaving Requests</h3>
+			{requests.map((req) => (
+				<React.Fragment key={req.id}>
+					{req.ok == null && req.joining === false ? (
 						<div>
 							<h3>{req.group_name}</h3>
 							<p>Managed By {req.manager_name}</p>
@@ -47,22 +74,55 @@ const UserRequests = () => {
 			{requests.map((req) => (
 				<React.Fragment key={req.id}>
 					{req.ok === true ? (
-						<div>
-							<h3>{req.group_name}</h3>
-							<p>Managed By {req.manager_name}</p>
+						<div
+							style={{
+								display: "flex",
+								justifyContent: "space-between",
+								alignItems: "center",
+							}}
+						>
+							<div>
+								<h3>{req.group_name}</h3>
+								<p>Managed By {req.manager_name}</p>
+							</div>
+							<div>
+								{req.joining
+									? "Joining Requested"
+									: "Leaving Requested"}
+							</div>
 						</div>
 					) : null}
 				</React.Fragment>
 			))}
 			<h2>Rejected Requests</h2>
-			{requests.every((req) => req.ok === true || req.ok == null) &&
-				"There is no rejected requests"}
+			{requests.every((req) => req.ok === true || req.ok == null) ? (
+				"There is no rejected requests"
+			) : (
+				<div>
+					<button onClick={handleDeleteRejected}>
+						Delete Rejected Requests
+					</button>
+				</div>
+			)}
 			{requests.map((req) => (
 				<React.Fragment key={req.id}>
 					{req.ok === false ? (
-						<div>
-							<h3>{req.group_name}</h3>
-							<p>Managed By {req.manager_name}</p>
+						<div
+							style={{
+								display: "flex",
+								justifyContent: "space-between",
+								alignItems: "center",
+							}}
+						>
+							<div>
+								<h3>{req.group_name}</h3>
+								<p>Managed By {req.manager_name}</p>
+							</div>
+							<div>
+								{req.joining
+									? "Joining Requested"
+									: "Leaving Requested"}
+							</div>
 						</div>
 					) : null}
 				</React.Fragment>

@@ -1,4 +1,5 @@
 import apiFetch from "./apiFetch";
+import serverFetch from "./serverFetch";
 
 export class UserStorage {
 	static users = {};
@@ -16,17 +17,31 @@ export class UserStorage {
 		this.id = id;
 	}
 
-	addGroupPrivateData(group_id, p, q, g, xi, yi) {
+	async addGroupPrivateData(group_id, p, q, g, xi, yi, token) {
 		p = p.toString();
 		q = q.toString();
 		g = g.toString();
 		xi = xi.toString();
 		yi = yi.toString();
 
-		localStorage.setItem(
-			`user-${this.id}-group-${group_id}`,
-			JSON.stringify({ p, q, g, xi, yi, group_id })
+		const { error } = await serverFetch(
+			"/requests",
+			{
+				method: "POST",
+				body: JSON.stringify({
+					p,
+					q,
+					g,
+					xi,
+					yi,
+					group_id,
+				}),
+			},
+			token
 		);
+		if (error) {
+			throw new Error(error);
+		}
 		return {
 			p: BigInt(p),
 			q: BigInt(q),
@@ -37,21 +52,22 @@ export class UserStorage {
 		};
 	}
 
-	getGroupPrivateData(group_id) {
-		if (!localStorage.getItem(`user-${this.id}-group-${group_id}`)) {
+	async getGroupPrivateData(group_id, token) {
+		const { data, error } = await serverFetch(
+			`/requests/${group_id}`,
+			{},
+			token
+		);
+		if (error) {
 			return null;
 		}
 
-		const { p, q, g, xi, yi } = JSON.parse(
-			localStorage.getItem(`user-${this.id}-group-${group_id}`)
-		);
-
 		return {
-			p: BigInt(p),
-			q: BigInt(q),
-			g: BigInt(g),
-			xi: BigInt(xi),
-			yi: BigInt(yi),
+			p: BigInt(data.data.p),
+			q: BigInt(data.data.q),
+			g: BigInt(data.data.g),
+			xi: BigInt(data.data.xi),
+			yi: BigInt(data.data.yi),
 			group_id,
 		};
 	}
@@ -107,17 +123,12 @@ export class ManagerStorage {
 		this.id = id;
 	}
 
-	async addGroup() {
-		const { data, error } = await apiFetch(
-			"/api/manager/group",
-			{},
-			localStorage.getItem("token") || ""
-		);
+	async getGroup(token) {
+		const { data, error } = await apiFetch("/api/manager/group", {}, token);
 		if (error) {
 			throw new Error(error);
 		}
 
-		localStorage.setItem(`manager-${this.id}-group`, JSON.stringify(data));
 		return {
 			...data,
 			p: BigInt(data.p),
@@ -126,44 +137,36 @@ export class ManagerStorage {
 		};
 	}
 
-	async getGroup() {
-		if (!localStorage.getItem(`manager-${this.id}-group`)) {
-			const data = this.addGroup();
-			return data;
-		}
-
-		const data = JSON.parse(
-			localStorage.getItem(`manager-${this.id}-group`)
+	async addK(k, time, token) {
+		const { data, error } = await serverFetch(
+			"/k",
+			{
+				method: "POST",
+				body: JSON.stringify({ k: k.toString(), time: time.toJSON() }),
+			},
+			token
 		);
-		return {
-			...data,
-			p: BigInt(data.p),
-			q: BigInt(data.q),
-			g: BigInt(data.g),
-		};
-	}
-
-	addK(k, time) {
-		let currentKs = [];
-		if (localStorage.getItem(`manager-${this.id}-k`)) {
-			currentKs = JSON.parse(
-				localStorage.getItem(`manager-${this.id}-k`)
-			);
+		if (error) {
+			return null;
 		}
-		currentKs.push({ k: k.toString(), time: time.toJSON() });
-		currentKs.sort((a, b) => new Date(a.time) - new Date(b.time));
-		localStorage.setItem(`manager-${this.id}-k`, JSON.stringify(currentKs));
+		data.currentKs.sort((a, b) => new Date(a.time) - new Date(b.time));
+		const currentKs = data.currentKs.map((obj) => ({
+			k: BigInt(obj.k),
+			time: new Date(obj.time),
+		}));
 		return currentKs;
 	}
 
-	getKs() {
-		let currentKs = [];
-		if (localStorage.getItem(`manager-${this.id}-k`)) {
-			currentKs = JSON.parse(
-				localStorage.getItem(`manager-${this.id}-k`)
-			);
+	async getKs(token) {
+		const { data, error } = await serverFetch("/k", {}, token);
+		if (error) {
+			return null;
 		}
-		currentKs.sort((a, b) => new Date(a.time) - new Date(b.time));
+		data.currentKs.sort((a, b) => new Date(a.time) - new Date(b.time));
+		const currentKs = data.currentKs.map((obj) => ({
+			k: BigInt(obj.k),
+			time: new Date(obj.time),
+		}));
 
 		return currentKs;
 	}

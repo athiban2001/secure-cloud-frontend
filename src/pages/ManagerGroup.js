@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import apiFetch from "../utils/apiFetch";
 import { IsAuthenticatedContext } from "../utils/useLocalState";
 import ManagerNav from "../components/ManagerNav";
+import { dateDiff } from "../utils/date";
 
 const ManagerGroup = () => {
 	const [group, setGroup] = useState(null);
@@ -47,6 +48,23 @@ const ManagerGroup = () => {
 							</li>
 						</ul>
 						<h4>The Group Members are</h4>
+						{group.members &&
+							group.members.map((member) => (
+								<div key={member.user_id}>
+									<div>{member.name}</div>
+									<a href={`mailto://${member.email}`}>
+										{member.email}
+									</a>
+									<div>
+										Joined{" "}
+										{dateDiff(
+											new Date(),
+											new Date(member.join_time)
+										)}{" "}
+										ago
+									</div>
+								</div>
+							))}
 					</div>
 				)}
 			</div>
