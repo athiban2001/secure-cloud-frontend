@@ -3,6 +3,7 @@ const fs = require("fs/promises");
 const cors = require("cors");
 const path = require("path");
 const FileRouter = require("./upload/routes");
+const DownloadRouter = require("./download/routes");
 
 const app = express();
 app.use(cors());
@@ -12,6 +13,7 @@ const dataDirectory = path.join(__dirname, "./data");
 const dataFile = path.join(dataDirectory, "data.json");
 
 app.use(FileRouter);
+app.use(DownloadRouter);
 
 // fs.readFile(dataFile, { encoding: "utf-8" }).then((data) => {
 // 	data = JSON.parse(data);

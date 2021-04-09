@@ -81,6 +81,7 @@ const UserFileUpload = () => {
 					setLoading(false);
 				})
 				.catch(() => {
+					setLoading(false);
 					setError("An Error In file uploading");
 				});
 		}
