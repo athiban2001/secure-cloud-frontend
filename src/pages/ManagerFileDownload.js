@@ -1,39 +1,31 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useHistory, useParams } from "react-router";
 import { saveAs } from "file-saver";
-import UserGroupNav from "../components/UserGroupNav";
 import apiFetch from "../utils/apiFetch";
 import serverFetch from "../utils/serverFetch";
 import { dateDiff } from "../utils/date";
 import { IsAuthenticatedContext } from "../utils/useLocalState";
+import ManagerNav from "../components/ManagerNav";
 
-const UserFileDownload = () => {
+const ManagerFileDownload = () => {
 	const [loading, setLoading] = useState(false);
 	const [files, setFiles] = useState([]);
 	const [error, setError] = useState("");
-	const { id } = useParams();
 	const [token] = useContext(IsAuthenticatedContext);
-	const router = useHistory();
 
 	useEffect(() => {
-		apiFetch(`/api/file/${id}/files`, {}, token).then(({ data, error }) => {
+		apiFetch(`/api/manager/files`, {}, token).then(({ data, error }) => {
 			if (error) {
 				setError(error);
 				return;
 			}
 			setFiles(data.files);
 		});
-	}, [id, token]);
-
-	if (!id) {
-		router.push(`/user/groups`);
-		return null;
-	}
+	}, [token]);
 
 	const onClick = async (file) => {
 		setLoading(true);
 		const { data, error } = await serverFetch(
-			`/${id}/download/${file.id}`,
+			`/manager/download/${file.id}`,
 			{},
 			token
 		);
@@ -62,7 +54,7 @@ const UserFileDownload = () => {
 	const onDelete = async (file) => {
 		setLoading(true);
 		const { error } = await apiFetch(
-			`/api/file/${id}/files/${file.id}`,
+			`/api/manager/files/${file.id}`,
 			{ method: "DELETE" },
 			token
 		);
@@ -76,7 +68,7 @@ const UserFileDownload = () => {
 
 	return (
 		<>
-			<UserGroupNav />
+			<ManagerNav />
 			<h1>All Files In This Group</h1>
 			{error && (
 				<div>
@@ -101,11 +93,7 @@ const UserFileDownload = () => {
 							{dateDiff(new Date(), new Date(file.file_time))} ago
 						</p>
 						<button onClick={() => onClick(file)}>Download</button>
-						{file.isOwner && (
-							<button onClick={() => onDelete(file)}>
-								Delete
-							</button>
-						)}
+						<button onClick={() => onDelete(file)}>Delete</button>
 					</div>
 				);
 			})}
@@ -113,4 +101,4 @@ const UserFileDownload = () => {
 	);
 };
 
-export default UserFileDownload;
+export default ManagerFileDownload;

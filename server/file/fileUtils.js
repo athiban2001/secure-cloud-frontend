@@ -69,44 +69,26 @@ const encryptFile = async (fileAbsolutePath, token, groupId, filename) => {
 	const data = JSON.parse(dataString);
 	let groupKey, response;
 
-	if (tokenPayload.role === "MANAGER") {
-		const managerData =
-			data[
-				`${tokenPayload.role}-${tokenPayload.id}-${tokenPayload.groupId}`
-			];
-		managerData.sort((a, b) => new Date(b.time) - new Date(a.time));
-		response = await fetch(
-			process.env.REACT_APP_API_URL + "/api/manager/group",
-			{
-				headers: {
-					authorization: `Bearer ${token}`,
-				},
-			}
-		).then((res) => res.json());
-		groupKey = find_manager_gk(response.g, managerData[0].k, response.p);
-	} else {
-		const userData =
-			data[`${tokenPayload.role}-${tokenPayload.id}-${groupId}`];
-		if (!userData) {
-			return null;
-		}
-		response = await fetch(
-			process.env.REACT_APP_API_URL + `/api/file/${groupId}/upload/init`,
-			{
-				method: "POST",
-				headers: {
-					authorization: `Bearer ${token}`,
-					"content-type": "application/json",
-				},
-				body: JSON.stringify({
-					original_filename: filename,
-					file_size: fs.statSync(fileAbsolutePath).size,
-				}),
-			}
-		).then((res) => res.json());
-		console.log(response);
-		groupKey = find_user_gk(response.Xik, userData.yi, userData.p);
+	const userData = data[`${tokenPayload.role}-${tokenPayload.id}-${groupId}`];
+	if (!userData) {
+		return null;
 	}
+	response = await fetch(
+		process.env.REACT_APP_API_URL + `/api/file/${groupId}/upload/init`,
+		{
+			method: "POST",
+			headers: {
+				authorization: `Bearer ${token}`,
+				"content-type": "application/json",
+			},
+			body: JSON.stringify({
+				original_filename: filename,
+				file_size: fs.statSync(fileAbsolutePath).size,
+			}),
+		}
+	).then((res) => res.json());
+	console.log(response);
+	groupKey = find_user_gk(response.Xik, userData.yi, userData.p);
 	const groupKeyByte = bigToUint8Array(groupKey);
 	const encryptedData = salsa20.encrypt(
 		groupKeyByte,
@@ -116,6 +98,7 @@ const encryptFile = async (fileAbsolutePath, token, groupId, filename) => {
 	const encryptedBuffer = Buffer.from(encryptedData.buffer).toString(
 		"base64"
 	);
+	fs.unlink(fileAbsolutePath, () => {});
 	return {
 		original_filename: response.original_filename,
 		id: response.file_id,
@@ -123,9 +106,71 @@ const encryptFile = async (fileAbsolutePath, token, groupId, filename) => {
 	};
 };
 
+const encryptFileManager = async (
+	fileAbsolutePath,
+	token,
+	groupId,
+	filename
+) => {
+	const tokenPayload = JSON.parse(
+		Buffer.from(token.split(".")[1], "base64").toString("binary")
+	);
+	const dataString = await fsPromise.readFile(
+		path.join(dataDirectory, "data.json"),
+		{ encoding: "utf-8" }
+	);
+	const data = JSON.parse(dataString);
+	let groupKey, response;
+	const managerData =
+		data[`${tokenPayload.role}-${tokenPayload.id}-${tokenPayload.groupId}`];
+	managerData.sort((a, b) => new Date(b.time) - new Date(a.time));
+	response = await fetch(
+		process.env.REACT_APP_API_URL + "/api/manager/group",
+		{
+			headers: {
+				authorization: `Bearer ${token}`,
+			},
+		}
+	).then((res) => res.json());
+	groupKey = find_manager_gk(response.g, managerData[0].k, response.p);
+	const groupKeyByte = bigToUint8Array(groupKey);
+	const encryptedData = salsa20.encrypt(
+		groupKeyByte,
+		groupKeyByte.slice(0, 8),
+		fs.readFileSync(fileAbsolutePath)
+	);
+	const encryptedBuffer = Buffer.from(encryptedData.buffer).toString(
+		"base64"
+	);
+
+	const size = fs.statSync(fileAbsolutePath).size;
+	fs.unlink(fileAbsolutePath, () => {});
+	return {
+		original_filename: filename,
+		content: encryptedBuffer,
+		file_size: size,
+	};
+};
+
 const uploadFile = async (body, token, groupId) => {
 	const response = await fetch(
 		process.env.REACT_APP_API_URL + `/api/file/${groupId}/upload`,
+		{
+			method: "POST",
+			headers: {
+				authorization: `Bearer ${token}`,
+				"content-type": "application/json",
+			},
+			body: JSON.stringify(body),
+		}
+	).then((res) => res.json());
+
+	return response;
+};
+
+const uploadFileManager = async (body, token) => {
+	const response = await fetch(
+		process.env.REACT_APP_API_URL + `/api/manager/files`,
 		{
 			method: "POST",
 			headers: {
@@ -159,10 +204,10 @@ const decryptFile = async (
 		filetime = new Date(filetime);
 		let k;
 		const managerData = data[`${payload.role}-${payload.id}-${groupId}`];
-		managerData.sort((a, b) => new Date(a.time) - new Date(b.time));
+		managerData.sort((a, b) => new Date(b.time) - new Date(a.time));
 		for (let i = 0; i < managerData.length; i++) {
-			if (new Date(managerData[i].time) > filetime) {
-				k = managerData[i - 1 >= 0 ? i - 1 : 0].k;
+			if (new Date(managerData[i].time) < filetime) {
+				k = managerData[i].k;
 				break;
 			}
 		}
@@ -178,6 +223,7 @@ const decryptFile = async (
 		groupKey = find_manager_gk(response.g, k, response.p);
 	} else {
 		const user_data = data[`${payload.role}-${payload.id}-${groupId}`];
+		console.log(user_data);
 		groupKey = find_user_gk(Xik, user_data.yi, user_data.p);
 	}
 
@@ -206,4 +252,6 @@ module.exports = {
 	encryptFile,
 	decryptFile,
 	uploadFile,
+	uploadFileManager,
+	encryptFileManager,
 };

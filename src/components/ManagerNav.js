@@ -17,6 +17,12 @@ const ManagerNav = () => {
 			<Link href="/manager/requests" to="/manager/requests">
 				View Requests
 			</Link>
+			<Link href="/manager/files/upload" to="/manager/files/upload">
+				File Upload
+			</Link>
+			<Link href="/manager/files" to="/manager/files">
+				File Download
+			</Link>
 			<Link href="/manager/logout" to="/manager/logout">
 				Logout
 			</Link>

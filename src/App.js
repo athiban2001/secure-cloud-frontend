@@ -15,6 +15,24 @@ import UserLogin from "./pages/UserLogin";
 import UserRequests from "./pages/UserRequests";
 import UserFileUpload from "./pages/UserFileUpload";
 import UserFileDownload from "./pages/UserFileDownload";
+import ManagerFileDownload from "./pages/ManagerFileDownload";
+import ManagerFileUpload from "./pages/ManagerFileUpload";
+
+// let P = 42144366793245396716227893492888489522912336514882657035214414288024566868499n;
+// let Q = 1239540199801335197536114514496720280085656956320078148094541596706604907897n;
+// let G = 9314978633812438002952252984184064596816739821078769869430174908118104702615n;
+// let xi1 = 5867536015003039856420220325384169988081215815218645187853899460520827789969n;
+// let yi1 = 4253729872603419309270437529715658235921908990471571853380020590622144187451n;
+// let xi2 = 23645728748330545974359726574721390207474709509739852603681454181018006894045n;
+// let yi2 = 29689039754721456200671737816115448487640806656783112518306828929358772374381n;
+// let k = 1090335364768251850520964443760973694938497894669462618252626887456707480866n;
+// for (let i = 1; i <= 30; i++) {
+// 	console.time(i * 10);
+// 	for (let j = 0; j < i * 10; j++) {
+// 		modPow(modPow(G, xi2, P), k, P);
+// 	}
+// 	console.timeEnd(i * 10);
+// }
 
 // function findXandY() {
 // 	let p = 2892008489112152977727500423395925534448265782469434025702914019945396937427n;
@@ -104,6 +122,16 @@ function App() {
 								path="/manager/requests"
 								exact
 								component={ManagerRequests}
+							/>
+							<Route
+								path="/manager/files"
+								exact
+								component={ManagerFileDownload}
+							/>
+							<Route
+								path="/manager/files/upload"
+								exact
+								component={ManagerFileUpload}
 							/>
 							<Route
 								path="/user/groups"

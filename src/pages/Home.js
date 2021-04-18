@@ -21,11 +21,6 @@ const Home = () => {
 						Group Manager
 					</Link>
 				</div>
-				<div>
-					<Link href="/" to="/">
-						Group Member
-					</Link>
-				</div>
 			</nav>
 		</div>
 	);
